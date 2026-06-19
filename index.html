@@ -303,6 +303,19 @@ body.mob-touch #cornerBtns { display: none !important; }
 #mobDamage .mob-btn { min-height: 80px; }
 /* MOBILE OVERLAY fix6: center button fixed width (~40%) instead of flex:1 */
 #mobDamageContinue  { flex: none; width: 38%; text-align: center; }
+/* MOBILE OVERLAY — recon bar reuses same layout as damage-view bar */
+#mobRecon {
+  position: absolute;
+  left: 4%; right: 4%;
+  top: 50%; transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+#mobRecon .mob-btn { min-height: 80px; }
+#mobReconReturn { flex: none; width: 38%; text-align: center; }
 
 /* MOBILE OVERLAY — game-over overlay buttons */
 #mobGameOver {
@@ -423,6 +436,13 @@ body.mob-touch .gOverlay:not(.hidden) {
     <div id="mobInflightP2" class="mob-inflight mob-inflight-left">
       <button class="mob-btn" id="mob-p2-split">SPLIT</button>
       <button class="mob-btn" id="mob-p2-view-target">VIEW<br>TARGET</button>
+    </div>
+
+    <!-- MOBILE OVERLAY — recon (scout) bar: scroll left | return to cannon | scroll right -->
+    <div id="mobRecon">
+      <button class="mob-btn" id="mob-recon-scroll-left">&lt;<br>SCROLL</button>
+      <button class="mob-btn" id="mobReconReturn">RETURN TO<br>CANNON</button>
+      <button class="mob-btn" id="mob-recon-scroll-right">&gt;<br>SCROLL</button>
     </div>
 
     <!-- MOBILE OVERLAY — damage-view bar: scroll left | continue | scroll right -->
@@ -2949,6 +2969,14 @@ function mobScroll(dir) {
   cam.tx = Math.max(0, Math.min(WW - VW, cam.tx + dir * 8));
 }
 
+// MOBILE OVERLAY — action: pan camera during recon/scout (same as ArrowLeft/Right in recon state)
+function mobReconScroll(dir) {
+  if (state !== 'recon' || reconTween.active) return;
+  cam.tx = Math.max(0, Math.min(WW - VW, cam.tx + dir * 8));
+  cam.x = cam.tx; cam.vx = 0;
+  setSavedView(cam.x, cam.y);
+}
+
 // MOBILE OVERLAY — action: fire (same as Space/fireBtn in aiming state)
 function mobFire() {
   if (state === 'aiming') fireShell();
@@ -3027,6 +3055,12 @@ mobBindHold(document.getElementById('mob-p2-plus-angle'),  function(){ mobAngle(
 mobBindHold(document.getElementById('mob-scroll-left'),  function(){ mobScroll(-1); }, 12);
 mobBindHold(document.getElementById('mob-scroll-right'), function(){ mobScroll(+1); }, 12);
 
+// Recon scroll hold-to-repeat (same fast startInterval as damage scroll)
+mobBindHold(document.getElementById('mob-recon-scroll-left'),  function(){ mobReconScroll(-1); }, 12);
+mobBindHold(document.getElementById('mob-recon-scroll-right'), function(){ mobReconScroll(+1); }, 12);
+// Return to cannon tap (same as V key in recon state — reuses mobScout's recon→aiming branch)
+mobBindTap(document.getElementById('mobReconReturn'), mobScout);
+
 // MOBILE OVERLAY — bind all tap buttons
 mobBindTap(document.getElementById('mob-p1-scout'),       mobScout);
 mobBindTap(document.getElementById('mob-p1-fire'),        mobFire);
@@ -3052,16 +3086,20 @@ function mobUpdateOverlay() {
   if (!isTouchPrimary) return;
   document.getElementById('mobileOverlay').classList.add('mob-active');
 
-  var isReady    = (state === 'aiming' || state === 'recon');
+  var isReady    = (state === 'aiming');
+  var isRecon    = (state === 'recon');
   var isInflight = (state === 'firing' || state === 'targetView');
   var isDamage   = (state === 'damage');
   var isGameOver = (state === 'levelComplete');
 
-  // Determine which ready cluster is active
+  // Determine which ready cluster is active (hidden during recon)
   var showP1 = isReady && (gameMode === '1P' || currentPlayer === 1);
   var showP2 = isReady &&  gameMode === '2P' && currentPlayer === 2;
   document.getElementById('mobReadyP1').style.display = showP1 ? '' : 'none';
   document.getElementById('mobReadyP2').style.display = showP2 ? '' : 'none';
+
+  // Recon bar
+  document.getElementById('mobRecon').style.display = isRecon ? '' : 'none';
 
   // In-flight: P1/1P fires from left so controls float right; P2 controls float left
   var inflP1 = isInflight && (gameMode === '1P' || currentPlayer === 1);
