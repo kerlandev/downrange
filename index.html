@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Drafted · Artillery</title>
+<!-- MOBILE OVERLAY — viewport meta for proper scaling on touch devices -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Downrange · Artillery</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#555;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -134,10 +136,212 @@ canvas{display:block;cursor:crosshair;}
 #howToPlayOverlay .htpKey{color:#e8e6dd;font-weight:bold;min-width:130px;}
 #howToPlayOverlay .htpAct{color:#a8a8a8;text-align:right;flex:1;}
 #howToPlayOverlay .htpFoot{margin-top:10px;font-size:9px;color:#777;text-align:center;letter-spacing:1.5px;}
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE OVERLAY — styles for touch controls (coarse-pointer only)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Body adjustments when mobile active */
+body.mob-touch {
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+/* MOBILE OVERLAY — hide desktop corner buttons on touch devices */
+body.mob-touch #cornerBtns { display: none !important; }
+
+/* MOBILE OVERLAY — rotate-device prompt */
+#mobRotateOverlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #000;
+  color: #00ff41;
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 9999;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+#mobRotateOverlay.show { display: flex; }
+#mobRotateOverlay::before {
+  content: '↻';
+  font-size: 52px;
+  display: block;
+}
+
+/* MOBILE OVERLAY — main overlay container */
+#mobileOverlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+#mobileOverlay.mob-active { display: block; }
+
+/* MOBILE OVERLAY — base button style */
+.mob-btn {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 22px;
+  text-transform: uppercase;
+  color: #00ff41;
+  background: rgba(0, 0, 0, 0.78);
+  border: 2px solid #00ff41;
+  border-radius: 12px;
+  min-width: 64px;
+  min-height: 64px;
+  padding: 12px 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  letter-spacing: 1.5px;
+  line-height: 1.3;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+}
+.mob-btn:active { background: rgba(0, 255, 65, 0.15); }
+/* MOBILE OVERLAY — fire button red variant */
+.mob-fire { color: #ff6666; border-color: #ff6666; }
+.mob-fire:active { background: rgba(255, 102, 102, 0.15); }
+/* MOBILE OVERLAY — disabled state (no splits remaining) */
+.mob-btn-disabled { opacity: 0.35; pointer-events: none !important; }
+
+/* MOBILE OVERLAY — persistent top-left Coffee + Menu stack */
+#mobPersistent {
+  position: absolute;
+  top: 8px; left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 11;
+}
+#mobPersistent .mob-btn {
+  /* persistent buttons keep 22px font but reduced padding */
+  min-height: 0;
+  min-width: 0;
+  padding: 6px 12px;
+}
+
+/* MOBILE OVERLAY — D-pad cluster common */
+.mob-cluster {
+  position: absolute;
+  top: 10%; bottom: 18%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+}
+.mob-cluster-right { right: 2%; }
+.mob-cluster-left  { left:  2%; }
+/* MOBILE OVERLAY fix2: P2 cluster starts lower to clear persistent Coffee+Menu buttons */
+#mobReadyP2 { top: 24%; }
+
+/* MOBILE OVERLAY — 3×3 grid for D-pad + actions; cells grown for 22px font */
+.mob-dpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 5px;
+}
+.mob-dpad-grid .mob-btn {
+  width: 100px; height: 100px;
+  padding: 6px;
+  min-width: 0; min-height: 0;
+}
+/* MOBILE OVERLAY — empty grid cell (invisible spacer) */
+.mob-dpad-empty {
+  width: 100px; height: 100px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* MOBILE OVERLAY — in-flight side buttons */
+.mob-inflight {
+  position: absolute;
+  top: 22%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.mob-inflight-right { right: 3%; }
+.mob-inflight-left  { left:  3%; }
+.mob-inflight .mob-btn {
+  width: 130px;
+  min-height: 100px;
+}
+
+/* MOBILE OVERLAY — damage-view bar */
+#mobDamage {
+  position: absolute;
+  left: 4%; right: 4%;
+  top: 50%; transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+#mobDamage .mob-btn { min-height: 80px; }
+/* MOBILE OVERLAY fix6: center button fixed width (~40%) instead of flex:1 */
+#mobDamageContinue  { flex: none; width: 38%; text-align: center; }
+
+/* MOBILE OVERLAY — game-over overlay buttons */
+#mobGameOver {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+#mobPriorLevel {
+  position: absolute;
+  left: 2%; top: 33%;
+  width: 130px; min-height: 110px;
+  pointer-events: auto;
+}
+#mobNextLevel {
+  position: absolute;
+  right: 2%; top: 33%;
+  width: 130px; min-height: 110px;
+  pointer-events: auto;
+}
+#mobPlayAgain {
+  position: absolute;
+  left: 28%; right: 28%;
+  top: 70%;
+  min-height: 64px;
+  pointer-events: auto;
+}
+/* MOBILE OVERLAY fix1 — scale game menu overlays up for mobile legibility.
+   transform-origin: top right keeps the overlay anchored to its natural corner.
+   z-index: 20 floats it above the mobile button layer (z-index 10/11). */
+body.mob-touch .gOverlay:not(.hidden) {
+  transform: scale(2);
+  transform-origin: top right;
+  z-index: 20;
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
 </head>
 <body>
+<!-- MOBILE OVERLAY — portrait-lock message, shown outside the game wrap -->
+<div id="mobRotateOverlay">Rotate your device to play.</div>
 <div id="wrap">
 <div id="topbar">
   <div class="pside">
@@ -160,6 +364,82 @@ canvas{display:block;cursor:crosshair;}
 </div>
 <div id="canvasArea">
   <canvas id="c" width="960" height="480"></canvas>
+
+  <!-- MOBILE OVERLAY — touch-control overlay, pointer-events:none overall; buttons inside opt in -->
+  <div id="mobileOverlay">
+
+    <!-- MOBILE OVERLAY — persistent: Coffee + Menu, top-left, stacked vertically -->
+    <div id="mobPersistent">
+      <a id="mobCoffeeBtn" class="mob-btn" href="https://ko-fi.com/PLACEHOLDER" target="_blank" rel="noopener">BUY ME COFFEE ☕</a>
+      <button id="mobMenuBtn" class="mob-btn">MENU</button>
+    </div>
+
+    <!-- MOBILE OVERLAY — P1 / 1P ready cluster (right side)
+         Grid layout (3 cols × 3 rows):
+           row1: [empty]  [+POWER] [empty]
+           row2: [-ANGLE] [-POWER] [+ANGLE]
+           row3: [SCOUT]  [empty]  [FIRE]  -->
+    <div id="mobReadyP1" class="mob-cluster mob-cluster-right">
+      <div class="mob-dpad-grid">
+        <div class="mob-dpad-empty"></div>
+        <button class="mob-btn" id="mob-plus-power">+<br>POWER</button>
+        <div class="mob-dpad-empty"></div>
+        <button class="mob-btn" id="mob-p1-minus-angle">-<br>ANGLE</button>
+        <button class="mob-btn" id="mob-minus-power">-<br>POWER</button>
+        <button class="mob-btn" id="mob-p1-plus-angle">+<br>ANGLE</button>
+        <button class="mob-btn" id="mob-p1-scout">SCOUT</button>
+        <div class="mob-dpad-empty"></div>
+        <button class="mob-btn mob-fire" id="mob-p1-fire">FIRE</button>
+      </div>
+    </div>
+
+    <!-- MOBILE OVERLAY — P2 ready cluster (left side, mirrored)
+         Grid layout:
+           row1: [empty]  [+POWER] [empty]
+           row2: [-ANGLE] [-POWER] [+ANGLE]   ← left/right swapped vs P1
+           row3: [FIRE]   [empty]  [SCOUT]    ← fire/scout swapped vs P1 -->
+    <div id="mobReadyP2" class="mob-cluster mob-cluster-left">
+      <div class="mob-dpad-grid">
+        <div class="mob-dpad-empty"></div>
+        <button class="mob-btn" id="mob-p2-plus-power">+<br>POWER</button>
+        <div class="mob-dpad-empty"></div>
+        <button class="mob-btn" id="mob-p2-minus-angle">-<br>ANGLE</button>
+        <button class="mob-btn" id="mob-p2-minus-power">-<br>POWER</button>
+        <button class="mob-btn" id="mob-p2-plus-angle">+<br>ANGLE</button>
+        <button class="mob-btn mob-fire" id="mob-p2-fire">FIRE</button>
+        <div class="mob-dpad-empty"></div>
+        <button class="mob-btn" id="mob-p2-scout">SCOUT</button>
+      </div>
+    </div>
+
+    <!-- MOBILE OVERLAY — in-flight P1/1P buttons (right side): SPLIT + VIEW TARGET -->
+    <div id="mobInflightP1" class="mob-inflight mob-inflight-right">
+      <button class="mob-btn" id="mob-p1-split">SPLIT</button>
+      <button class="mob-btn" id="mob-p1-view-target">VIEW<br>TARGET</button>
+    </div>
+
+    <!-- MOBILE OVERLAY — in-flight P2 buttons (left side, 2P only): SPLIT + VIEW TARGET -->
+    <div id="mobInflightP2" class="mob-inflight mob-inflight-left">
+      <button class="mob-btn" id="mob-p2-split">SPLIT</button>
+      <button class="mob-btn" id="mob-p2-view-target">VIEW<br>TARGET</button>
+    </div>
+
+    <!-- MOBILE OVERLAY — damage-view bar: scroll left | continue | scroll right -->
+    <div id="mobDamage">
+      <button class="mob-btn" id="mob-scroll-left">&lt;<br>SCROLL</button>
+      <button class="mob-btn" id="mobDamageContinue">CONTINUE</button>
+      <button class="mob-btn" id="mob-scroll-right">&gt;<br>SCROLL</button>
+    </div>
+
+    <!-- MOBILE OVERLAY — game-over buttons: Prior Level (left) | Next Level (right) | Play Again (center below) -->
+    <div id="mobGameOver">
+      <button class="mob-btn" id="mobPriorLevel">PRIOR<br>LEVEL</button>
+      <button class="mob-btn" id="mobNextLevel">NEXT<br>LEVEL</button>
+      <button class="mob-btn" id="mobPlayAgain">PLAY AGAIN</button>
+    </div>
+
+  </div><!-- end #mobileOverlay -->
+
   <div id="cornerBtns">
     <button id="menuBtn">MENU</button>
     <!-- Ko-fi: replace PLACEHOLDER with your Ko-fi username -->
@@ -2547,6 +2827,310 @@ function loop(now){
 function drawLayer(f,fn,yOff=0){cx.save();cx.translate(-cam.x*f,cam.y*(1-f)-yOff);fn();cx.restore();}
 
 buildLevel(1);updateHUD();loop();
+
+// ═══════════════════════════════════════════════════════════════════
+// MOBILE OVERLAY — touch controls for coarse-pointer (mobile) devices
+// All code below is purely additive; zero desktop side effects.
+// ═══════════════════════════════════════════════════════════════════
+
+// MOBILE OVERLAY — detect touch-primary input via media query (no UA sniffing)
+let isTouchPrimary = window.matchMedia('(pointer: coarse) and (hover: none)').matches;
+
+// MOBILE OVERLAY — scale the entire #wrap via CSS transform to letterbox-fit landscape viewport
+function mobScaleWrap() {
+  const wrap = document.getElementById('wrap');
+  if (!isTouchPrimary) {
+    wrap.style.transform = '';
+    wrap.style.position = '';
+    wrap.style.left = '';
+    wrap.style.top = '';
+    document.body.classList.remove('mob-touch');
+    return;
+  }
+  document.body.classList.add('mob-touch');
+  // Reset transform first so offsetHeight gives natural dimensions
+  wrap.style.transform = '';
+  wrap.style.position = '';
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const natW = 960; // wrap is always 960px wide (canvas determines it)
+  const natH = wrap.offsetHeight; // natural height (canvas 480 + topbar if 2P + ui)
+  const scale = Math.min(vw / natW, vh / natH);
+  const offX = Math.max(0, (vw - natW * scale) / 2);
+  const offY = Math.max(0, (vh - natH * scale) / 2);
+  wrap.style.transformOrigin = 'top left';
+  wrap.style.transform = `scale(${scale})`;
+  wrap.style.position = 'absolute';
+  wrap.style.left = offX + 'px';
+  wrap.style.top  = offY + 'px';
+}
+
+// MOBILE OVERLAY — check orientation; show rotate prompt if portrait on touch device
+function mobCheckOrientation() {
+  if (!isTouchPrimary) return;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  document.getElementById('mobRotateOverlay').classList.toggle('show', isPortrait);
+  if (!isPortrait) mobScaleWrap();
+}
+
+// MOBILE OVERLAY — hold-to-repeat: fires actionFn immediately, then at decreasing intervals
+// Initial delay 350ms, reduces 30ms each step, minimum 50ms — reaches full speed ~2 seconds.
+function mobHoldRepeat(actionFn, startInterval) {
+  startInterval = startInterval || 200;
+  actionFn();
+  let interval = startInterval;
+  let tid = null;
+  function repeat() {
+    actionFn();
+    interval = Math.max(12, interval - 50);
+    tid = setTimeout(repeat, interval);
+  }
+  tid = setTimeout(repeat, interval);
+  return function cancel() { clearTimeout(tid); tid = null; };
+}
+
+// MOBILE OVERLAY fix3 — one-time passive document touchstart to unlock AudioContext.
+// Uses passive:true so it never blocks the browser's audio-gesture unlock mechanism,
+// and fires before any button-level handler so audio is ready for the first action.
+document.addEventListener('touchstart', function mobAudioUnlock() {
+  if (audioCtx.state === 'suspended') audioCtx.resume().then(startAmbient);
+  else startAmbient();
+  document.removeEventListener('touchstart', mobAudioUnlock);
+}, { passive: true });
+
+// MOBILE OVERLAY — bind hold-to-repeat on touchstart/touchend
+function mobBindHold(el, actionFn, startInterval) {
+  if (!el) return;
+  let cancel = null;
+  // passive:true — lets iOS audio unlock fire without gesture-token interference
+  el.addEventListener('touchstart', function() {
+    if (audioCtx.state === 'suspended') audioCtx.resume().then(startAmbient); else startAmbient();
+    cancel = mobHoldRepeat(actionFn, startInterval);
+  }, { passive: true });
+  // touchmove with preventDefault stops scroll while the finger is held on a button
+  el.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+  el.addEventListener('touchend',    function() { if (cancel) { cancel(); cancel = null; } });
+  el.addEventListener('touchcancel', function() { if (cancel) { cancel(); cancel = null; } });
+}
+
+// MOBILE OVERLAY — bind single tap (touchstart only, no hold repeat)
+function mobBindTap(el, actionFn) {
+  if (!el) return;
+  // passive:true — same audio-unlock reasoning as mobBindHold
+  el.addEventListener('touchstart', function() {
+    if (audioCtx.state === 'suspended') audioCtx.resume().then(startAmbient); else startAmbient();
+    actionFn();
+  }, { passive: true });
+  // touchmove preventDefault stops accidental scroll when tapping
+  el.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+}
+
+// MOBILE OVERLAY — action: angle adjust (delta applied with existing angSign logic)
+// +0.5 = same as ArrowRight keydown; -0.5 = same as ArrowLeft keydown
+function mobAngle(d) {
+  if (state !== 'aiming') return;
+  const angSign = (gameMode === '2P' && currentPlayer === 2) ? -1 : 1;
+  const before = cannon.angle;
+  cannon.angle = clamp(cannon.angle + d * angSign, -86, -2);
+  if (cannon.angle !== before) { updateHUD(); playClick(); }
+}
+
+// MOBILE OVERLAY — action: power adjust (+2 / -2 matching keyboard repeat step)
+function mobPower(d) {
+  if (state !== 'aiming') return;
+  cannon.power = clamp(cannon.power + d, 10, 100);
+  updateHUD();
+}
+
+// MOBILE OVERLAY — action: pan camera during damage view (same as ArrowLeft/Right held)
+function mobScroll(dir) {
+  if (state !== 'damage') return;
+  cam.tx = Math.max(0, Math.min(WW - VW, cam.tx + dir * 8));
+}
+
+// MOBILE OVERLAY — action: fire (same as Space/fireBtn in aiming state)
+function mobFire() {
+  if (state === 'aiming') fireShell();
+}
+
+// MOBILE OVERLAY — action: scout / return (same as V key)
+function mobScout() {
+  if (state === 'aiming') {
+    const sx = getSavedViewX(), sy = getSavedViewY();
+    const tvX = sx !== null ? sx : clamp(getScoutX(), 0, WW - VW);
+    const tvY = sy !== null ? sy : 0;
+    reconTween = { active:true, t:0, fromX:cam.x, fromY:cam.y, toX:tvX, toY:tvY, dir:'to', returnState:'', speed:1/60 };
+    state = 'recon'; updateHUD();
+  } else if (state === 'recon') {
+    const cx2 = clamp(cannon.wx - (cannon.facing === 1 ? VW * 0.16 : VW * 0.84), 0, WW - VW);
+    reconTween = { active:true, t:0, fromX:cam.x, fromY:cam.y, toX:cx2, toY:0, dir:'back', returnState:'aiming', speed:1/60 };
+    updateHUD();
+  }
+}
+
+// MOBILE OVERLAY — action: split shell (same as Space in firing state)
+function mobSplit() {
+  if (state === 'firing' && (!splitUsed || !splitUsed2)) {
+    splitShell();
+    mobUpdateOverlay(); // refresh split-button disabled state immediately
+  }
+}
+
+// MOBILE OVERLAY — action: view target / return to tracking (same as V in firing/targetView)
+function mobViewTarget() {
+  if (state === 'firing') {
+    const sx = getSavedViewX(), sy = getSavedViewY();
+    const tvX = sx !== null ? sx : clamp(getScoutX(), 0, WW - VW);
+    const tvY = sy !== null ? sy : 0;
+    reconTween = { active:true, t:0, fromX:cam.x, fromY:cam.y, toX:tvX, toY:tvY, dir:'to', returnState:'', speed:2/60 };
+    state = 'targetView'; updateHUD();
+  } else if (state === 'targetView') {
+    const sh = shells.find(function(s){ return s.active; }) || shells[0];
+    const trackX = sh ? clamp(sh.wx - VW * 0.42 + camInflightPanX, 0, WW - VW) : cam.x;
+    const trackY = sh ? sh.wy - VH * 0.44 : cam.y;
+    reconTween = { active:true, t:0, fromX:cam.x, fromY:cam.y, toX:trackX, toY:trackY, dir:'back', returnState:'firing', speed:2/60 };
+    updateHUD();
+  }
+}
+
+// MOBILE OVERLAY — action: continue / next player's turn (same as Space in damage state)
+function mobContinue() {
+  if (state === 'damage') {
+    if (gameMode === '2P' && !winner) { switchTurn(); }
+    else { state = 'aiming'; updateHUD(); }
+  }
+}
+
+// MOBILE OVERLAY — wire up the Ko-fi URL from the existing coffeeBtn (stay in sync)
+(function() {
+  const desktopCoffee = document.getElementById('coffeeBtn');
+  const mobCoffee = document.getElementById('mobCoffeeBtn');
+  if (desktopCoffee && mobCoffee) mobCoffee.href = desktopCoffee.href;
+})();
+
+// MOBILE OVERLAY — bind all hold-to-repeat buttons
+// Power (shared by both clusters — only one is visible at a time)
+mobBindHold(document.getElementById('mob-plus-power'),    function(){ mobPower(+2); });
+mobBindHold(document.getElementById('mob-minus-power'),   function(){ mobPower(-2); });
+mobBindHold(document.getElementById('mob-p2-plus-power'), function(){ mobPower(+2); });
+mobBindHold(document.getElementById('mob-p2-minus-power'),function(){ mobPower(-2); });
+
+// P1 angle (+ANGLE left = ArrowRight = +0.5; -ANGLE right = ArrowLeft = -0.5)
+mobBindHold(document.getElementById('mob-p1-plus-angle'),  function(){ mobAngle(+0.5); });
+mobBindHold(document.getElementById('mob-p1-minus-angle'), function(){ mobAngle(-0.5); });
+// P2 angle (SWAPPED: -ANGLE left = ArrowLeft = -0.5; +ANGLE right = ArrowRight = +0.5)
+mobBindHold(document.getElementById('mob-p2-minus-angle'), function(){ mobAngle(-0.5); });
+mobBindHold(document.getElementById('mob-p2-plus-angle'),  function(){ mobAngle(+0.5); });
+
+// Damage scroll hold-to-repeat
+mobBindHold(document.getElementById('mob-scroll-left'),  function(){ mobScroll(-1); }, 12);
+mobBindHold(document.getElementById('mob-scroll-right'), function(){ mobScroll(+1); }, 12);
+
+// MOBILE OVERLAY — bind all tap buttons
+mobBindTap(document.getElementById('mob-p1-scout'),       mobScout);
+mobBindTap(document.getElementById('mob-p1-fire'),        mobFire);
+mobBindTap(document.getElementById('mob-p2-scout'),       mobScout);
+mobBindTap(document.getElementById('mob-p2-fire'),        mobFire);
+mobBindTap(document.getElementById('mob-p1-split'),       mobSplit);
+mobBindTap(document.getElementById('mob-p1-view-target'), mobViewTarget);
+mobBindTap(document.getElementById('mob-p2-split'),       mobSplit);
+mobBindTap(document.getElementById('mob-p2-view-target'), mobViewTarget);
+mobBindTap(document.getElementById('mobDamageContinue'),  mobContinue);
+mobBindTap(document.getElementById('mobPriorLevel'),  function(){ gotoLevel(((currentLevel - 2 + NUM_LEVELS) % NUM_LEVELS) + 1); });
+mobBindTap(document.getElementById('mobNextLevel'),   function(){ gotoLevel((currentLevel % NUM_LEVELS) + 1); });
+mobBindTap(document.getElementById('mobPlayAgain'),   function(){ gotoLevel(currentLevel); });
+mobBindTap(document.getElementById('mobMenuBtn'), function() {
+  var m = document.getElementById('menuOverlay');
+  var open = m.classList.contains('hidden');
+  closeAllOverlays();
+  if (open) m.classList.remove('hidden');
+});
+
+// MOBILE OVERLAY — show/hide correct button groups based on current game state
+function mobUpdateOverlay() {
+  if (!isTouchPrimary) return;
+  document.getElementById('mobileOverlay').classList.add('mob-active');
+
+  var isReady    = (state === 'aiming' || state === 'recon');
+  var isInflight = (state === 'firing' || state === 'targetView');
+  var isDamage   = (state === 'damage');
+  var isGameOver = (state === 'levelComplete');
+
+  // Determine which ready cluster is active
+  var showP1 = isReady && (gameMode === '1P' || currentPlayer === 1);
+  var showP2 = isReady &&  gameMode === '2P' && currentPlayer === 2;
+  document.getElementById('mobReadyP1').style.display = showP1 ? '' : 'none';
+  document.getElementById('mobReadyP2').style.display = showP2 ? '' : 'none';
+
+  // In-flight: P1/1P fires from left so controls float right; P2 controls float left
+  var inflP1 = isInflight && (gameMode === '1P' || currentPlayer === 1);
+  var inflP2 = isInflight &&  gameMode === '2P' && currentPlayer === 2;
+  document.getElementById('mobInflightP1').style.display = inflP1 ? '' : 'none';
+  document.getElementById('mobInflightP2').style.display = inflP2 ? '' : 'none';
+
+  // Split availability — disable when both splits already used
+  var splitAvail = !splitUsed || !splitUsed2;
+  document.getElementById('mob-p1-split').classList.toggle('mob-btn-disabled', !splitAvail);
+  document.getElementById('mob-p2-split').classList.toggle('mob-btn-disabled', !splitAvail);
+
+  // Damage view bar
+  document.getElementById('mobDamage').style.display = isDamage ? '' : 'none';
+  if (isDamage) {
+    document.getElementById('mobDamageContinue').textContent =
+      (gameMode === '2P' && !winner) ? "NEXT PLAYER'S TURN" : 'CONTINUE';
+  }
+
+  // Game over
+  document.getElementById('mobGameOver').style.display = isGameOver ? '' : 'none';
+}
+
+// MOBILE OVERLAY — patch updateHUD so overlay refreshes on every game state change
+var _mobOrigUpdateHUD = updateHUD;
+updateHUD = function() {
+  _mobOrigUpdateHUD();
+  mobUpdateOverlay();
+};
+
+// MOBILE OVERLAY — patch setGameMode so overlay recomputes on 1P↔2P toggle
+var _mobOrigSetGameMode = setGameMode;
+setGameMode = function(m) {
+  _mobOrigSetGameMode(m);
+  if (isTouchPrimary) { mobScaleWrap(); mobUpdateOverlay(); }
+};
+
+// MOBILE OVERLAY — recompute on resize and orientation change
+function mobRecompute() {
+  isTouchPrimary = window.matchMedia('(pointer: coarse) and (hover: none)').matches;
+  if (isTouchPrimary) {
+    document.body.classList.add('mob-touch');
+    mobCheckOrientation();
+  } else {
+    document.body.classList.remove('mob-touch');
+    var wrap = document.getElementById('wrap');
+    wrap.style.transform = '';
+    wrap.style.position = '';
+    wrap.style.left = '';
+    wrap.style.top = '';
+    document.getElementById('mobileOverlay').classList.remove('mob-active');
+  }
+}
+window.addEventListener('resize',            mobRecompute);
+window.addEventListener('orientationchange', mobRecompute);
+
+// MOBILE OVERLAY — initial bootstrap
+if (isTouchPrimary) {
+  document.body.classList.add('mob-touch');
+  // fix1: show correct buttons immediately — no layout computation required for visibility
+  mobUpdateOverlay();
+  // Defer canvas scaling until after browser layout pass (needs offsetHeight for scale math)
+  requestAnimationFrame(function() {
+    mobCheckOrientation();
+    if (window.innerWidth >= window.innerHeight) {
+      mobScaleWrap();
+      mobUpdateOverlay(); // re-run after scaling so button groups reflect current state
+    }
+  });
+}
 </script>
 </body>
 </html>
